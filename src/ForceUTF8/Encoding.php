@@ -77,12 +77,14 @@ class Encoding {
         156 => "\xc5\x93",
 
         158 => "\xc5\xbe",
-        159 => "\xc5\xb8"
+        159 => "\xc5\xb8",
+
+        164 => "\xc3\xb1", // ñ
+        165 => "\xc3\x91", // Ñ
   );
 
     protected static $brokenUtf8ToUtf8 = array(
         "\xc2\x80" => "\xe2\x82\xac",
-
         "\xc2\x82" => "\xe2\x80\x9a",
         "\xc2\x83" => "\xc6\x92",
         "\xc2\x84" => "\xe2\x80\x9e",
@@ -183,21 +185,41 @@ class Encoding {
         $text[$k] = self::toUTF8($v);
       }
       return $text;
-    } 
-    
+    }
+
     if(!is_string($text)) {
       return $text;
     }
-       
+
     $max = self::strlen($text);
-  
+
     $buf = "";
     for($i = 0; $i < $max; $i++){
         $c1 = $text{$i};
-        if($c1>="\xc0"){ //Should be converted to UTF8, if it's not UTF8 already
-          $c2 = $i+1 >= $max? "\x00" : $text{$i+1};
-          $c3 = $i+2 >= $max? "\x00" : $text{$i+2};
-          $c4 = $i+3 >= $max? "\x00" : $text{$i+3};
+        $c2 = $i+1 >= $max? "\x00" : $text{$i+1};
+        $c3 = $i+2 >= $max? "\x00" : $text{$i+2};
+        $c4 = $i+3 >= $max? "\x00" : $text{$i+3};
+        $c5 = $i+4 >= $max? "\x00" : $text{$i+4};
+
+        if ($c1 == "\x61" && $c2 == "\xc3" && $c3 == "\x8c" && $c4 >= "\xc0") {
+            $buf .= "\xc3\xa1"; // á
+            $i += 4;
+        } else if ($c1 == "\x65" && $c2 == "\xc3" && $c3 == "\x8c" && $c4 >= "\xc0") {
+            $buf .= "\xc3\xa9"; // é
+            $i += 4;
+        } else if ($c1 == "\x69" && $c2 == "\xc3" && $c3 == "\x8c" && $c4 >= "\xc0") {
+            $buf .= "\xc3\xad"; // í
+            $i += 4;
+        } else if ($c1 == "\x6F" && $c2 == "\xc3" && $c3 == "\x8c" && $c4 >= "\xc0") {
+            $buf .= "\xc3\xb3"; // ó
+            $i += 4;
+        } else if ($c1 == "\x75" && $c2 == "\xc3" && $c3 == "\x8c" && $c4 >= "\xc0") {
+            $buf .= "\xc3\xba"; // ú
+            $i += 4;
+        } else if ($c1 == "\x6e" && $c2 == "\xc3" && $c3 == "\x8c" && $c4 >= "\xc0") {
+            $buf .= "\xc3\xb1"; // ñ
+            $i += 4;
+        } else if($c1>="\xc0"){ //Should be converted to UTF8, if it's not UTF8 already
             if($c1 >= "\xc0" & $c1 <= "\xdf"){ //looks like 2 bytes UTF8
                 if($c2 >= "\x80" && $c2 <= "\xbf"){ //yeah, almost sure it's UTF8 already
                     $buf .= $c1 . $c2;
